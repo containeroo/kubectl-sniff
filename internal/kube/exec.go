@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -38,20 +39,49 @@ func WaitForEphemeralContainerRunning(
 				return err
 			}
 
-			for _, status := range pod.Status.EphemeralContainerStatuses {
-				if status.Name != containerName {
-					continue
-				}
-
-				if status.State.Running != nil {
-					return nil
-				}
-
-				if status.State.Terminated != nil {
-					return fmt.Errorf("ephemeral container %q terminated with exit code %d", containerName, status.State.Terminated.ExitCode)
-				}
+			done, err := evaluateEphemeralContainerStatus(pod.Status.EphemeralContainerStatuses, containerName)
+			if err != nil {
+				return err
+			}
+			if done {
+				return nil
 			}
 		}
+	}
+}
+
+func evaluateEphemeralContainerStatus(statuses []corev1.ContainerStatus, containerName string) (bool, error) {
+	for _, status := range statuses {
+		if status.Name != containerName {
+			continue
+		}
+
+		if status.State.Running != nil {
+			return true, nil
+		}
+
+		if status.State.Terminated != nil {
+			return false, fmt.Errorf("ephemeral container %q terminated with exit code %d", containerName, status.State.Terminated.ExitCode)
+		}
+
+		if waiting := status.State.Waiting; waiting != nil && isFatalWaitingReason(waiting.Reason) {
+			message := strings.TrimSpace(waiting.Message)
+			if message != "" {
+				return false, fmt.Errorf("ephemeral container %q is waiting with reason %q: %s", containerName, waiting.Reason, message)
+			}
+			return false, fmt.Errorf("ephemeral container %q is waiting with reason %q", containerName, waiting.Reason)
+		}
+	}
+
+	return false, nil
+}
+
+func isFatalWaitingReason(reason string) bool {
+	switch reason {
+	case "CreateContainerConfigError", "CreateContainerError", "CrashLoopBackOff", "ErrImagePull", "ImageInspectError", "ImagePullBackOff", "InvalidImageName", "RunContainerError":
+		return true
+	default:
+		return false
 	}
 }
 

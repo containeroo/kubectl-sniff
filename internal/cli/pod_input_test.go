@@ -71,7 +71,7 @@ func TestValidationHelpers(t *testing.T) {
 
 		assert.True(t, IsSupportedServiceAccountValue(""))
 		assert.True(t, IsSupportedServiceAccountValue("from-pod"))
-		assert.False(t, IsSupportedServiceAccountValue("default"))
+		assert.True(t, IsSupportedServiceAccountValue("default"))
 	})
 
 	t.Run("requires command after dash when stdin or tty is enabled", func(t *testing.T) {

@@ -1,5 +1,7 @@
 package cli
 
+import "strings"
+
 // IsSupportedOutputFormat reports whether the dry-run output format is supported.
 func IsSupportedOutputFormat(output string) bool {
 	return output == "" || output == "yaml" || output == "json"
@@ -7,7 +9,7 @@ func IsSupportedOutputFormat(output string) bool {
 
 // IsSupportedServiceAccountValue reports whether the service-account flag value is supported.
 func IsSupportedServiceAccountValue(serviceAccount string) bool {
-	return serviceAccount == "" || serviceAccount == "from-pod"
+	return serviceAccount == "" || strings.TrimSpace(serviceAccount) != ""
 }
 
 // RequiresCommandAfterDash reports whether stdin or tty flags require an exec command.

@@ -1,4 +1,10 @@
-# sniff
+# kubectl-sniff
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/containeroo/kubectl-sniff?style=flat-square)](https://goreportcard.com/report/github.com/containeroo/kubectl-sniff)
+[![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/containeroo/kubectl-sniff)
+[![Release](https://img.shields.io/github/release/containeroo/kubectl-sniff.svg?style=flat-square)](https://github.com/containeroo/kubectl-sniff/releases/latest)
+[![GitHub tag](https://img.shields.io/github/tag/containeroo/kubectl-sniff.svg?style=flat-square)](https://github.com/containeroo/kubectl-sniff/releases/latest)
+[![license](https://img.shields.io/github/license/containeroo/kubectl-sniff.svg?style=flat-square)](LICENSE)
 
 `sniff` is a `kubectl` plugin for debugging pods when plain `kubectl debug` is not enough.
 
@@ -15,7 +21,7 @@ It can:
 
 ## TL;DR
 
-`sniff` now prefers a single top-level workflow:
+`sniff` has a single top-level workflow:
 
 - `kubectl sniff ...`: add an ephemeral debug container to the existing pod
 - `kubectl sniff --clone ...`: create a separate standalone debug pod derived from the existing pod
@@ -87,25 +93,25 @@ kubectl sniff
 
 ## Common Flags
 
-| Flag                            | Applies to                    | What it does                                                 |
-| ------------------------------- | ----------------------------- | ------------------------------------------------------------ |
-| `--image`                       | default, `--clone`           | Sets the debug container image                               |
-| `--clone`                       | top-level                     | Creates a standalone debug pod instead of attaching in place |
-| `--from-container`              | default, `--clone`           | Selects the regular container to copy fields from            |
-| `--copy-env`                    | default, `--clone`           | Copies `env` entries from `--from-container`                 |
-| `--copy-env-from`               | default, `--clone`           | Copies `envFrom` entries from `--from-container`             |
-| `--copy-volume-mounts`          | default, `--clone`           | Copies `volumeMounts` from `--from-container`                |
-| `--copy-service-account-mounts` | default, `--clone`           | Includes service account token mounts when copying volumes   |
-| `--profile`                     | default, `--clone`           | Applies a predefined security profile                        |
-| `--dry-run`                     | default, `--clone`           | Prints the generated manifest instead of applying it         |
-| `-o, --output`                  | default, `--clone`           | Selects the dry-run format: yaml or json                     |
-| `--target`                      | default                       | Targets another container's namespaces when supported        |
-| `--rewrite-subpath-mounts`      | default                       | Rewrites copied `subPath` mounts into debug-friendly mounts  |
-| `--command`                     | `--clone`                     | Sets the standalone debug container command                  |
-| `--arg`                         | `--clone`                     | Appends arguments to `--command`; repeat for multiple values |
-| `--service-account`             | `--clone`                     | Sets the service account on the standalone debug pod         |
-| `--quiet`                       | default, `--clone`           | Suppresses non-error output                                  |
-| `--verbose`                     | default, `--clone`           | Shows detailed copy summaries                                |
+| Flag                            | Applies to         | What it does                                                 |
+| ------------------------------- | ------------------ | ------------------------------------------------------------ |
+| `--image`                       | default, `--clone` | Sets the debug container image                               |
+| `--clone`                       | top-level          | Creates a standalone debug pod instead of attaching in place |
+| `--from-container`              | default, `--clone` | Selects the regular container to copy fields from            |
+| `--copy-env`                    | default, `--clone` | Copies `env` entries from `--from-container`                 |
+| `--copy-env-from`               | default, `--clone` | Copies `envFrom` entries from `--from-container`             |
+| `--copy-volume-mounts`          | default, `--clone` | Copies `volumeMounts` from `--from-container`                |
+| `--copy-service-account-mounts` | default, `--clone` | Includes service account token mounts when copying volumes   |
+| `--profile`                     | default, `--clone` | Applies a predefined security profile                        |
+| `--dry-run`                     | default, `--clone` | Prints the generated manifest instead of applying it         |
+| `-o, --output`                  | default, `--clone` | Selects the dry-run format: yaml or json                     |
+| `--target`                      | default            | Targets another container's namespaces when supported        |
+| `--rewrite-subpath-mounts`      | default            | Rewrites copied `subPath` mounts into debug-friendly mounts  |
+| `--command`                     | `--clone`          | Sets the standalone debug container command                  |
+| `--arg`                         | `--clone`          | Appends arguments to `--command`; repeat for multiple values |
+| `--service-account`             | `--clone`          | Sets the service account on the standalone debug pod         |
+| `--quiet`                       | default, `--clone` | Suppresses non-error output                                  |
+| `--verbose`                     | default, `--clone` | Shows detailed copy summaries                                |
 
 ## Usage
 

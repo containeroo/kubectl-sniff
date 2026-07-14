@@ -21,7 +21,7 @@ const ephemeralContainerPollInterval = 500 * time.Millisecond
 // WaitForEphemeralContainerRunning waits until the named ephemeral container is running.
 func WaitForEphemeralContainerRunning(
 	ctx context.Context,
-	clientset *kubernetes.Clientset,
+	clientset kubernetes.Interface,
 	namespace, podName, containerName string,
 ) error {
 	ticker := time.NewTicker(ephemeralContainerPollInterval)
@@ -89,7 +89,7 @@ func isFatalWaitingReason(reason string) bool {
 func ExecInPod(
 	ctx context.Context,
 	restConfig *rest.Config,
-	clientset *kubernetes.Clientset,
+	clientset kubernetes.Interface,
 	namespace, podName, containerName string,
 	command []string,
 	stdin io.Reader,

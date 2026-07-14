@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/containeroo/sniff/internal/debugpod"
-	"github.com/containeroo/sniff/internal/kube"
 	"github.com/containeroo/sniff/internal/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilrand "k8s.io/apimachinery/pkg/util/rand"
@@ -57,10 +56,23 @@ type AttachOptions struct {
 
 // RunAttach executes the attach flow against an existing pod.
 func RunAttach(ctx context.Context, streams genericiooptions.IOStreams, podName string, opts AttachOptions) error {
-	clientset, namespace, restConfig, err := kube.NewClientset(opts.Namespace)
+	deps, err := newRuntimeDependencies(opts.Namespace)
 	if err != nil {
 		return fmt.Errorf("build kubernetes client: %w", err)
 	}
+
+	return runAttach(ctx, streams, podName, opts, deps)
+}
+
+func runAttach(
+	ctx context.Context,
+	streams genericiooptions.IOStreams,
+	podName string,
+	opts AttachOptions,
+	deps runtimeDependencies,
+) error {
+	clientset := deps.client
+	namespace := deps.namespace
 
 	pod, err := clientset.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
 	if err != nil {
@@ -134,13 +146,13 @@ func RunAttach(ctx context.Context, streams genericiooptions.IOStreams, podName 
 		return nil
 	}
 
-	if err := kube.WaitForEphemeralContainerRunning(ctx, clientset, namespace, pod.Name, containerName); err != nil {
+	if err := deps.waitForEphemeralContainerRunning(ctx, clientset, namespace, pod.Name, containerName); err != nil {
 		return fmt.Errorf("wait for ephemeral container %q to be running: %w", containerName, err)
 	}
 
-	return kube.ExecInPod(
+	return deps.execInPod(
 		ctx,
-		restConfig,
+		deps.restConfig,
 		clientset,
 		namespace,
 		pod.Name,

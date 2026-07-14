@@ -10,7 +10,7 @@ import (
 
 // NewClientset builds a Kubernetes clientset and resolves the active namespace.
 // If namespaceOverride is empty, the current kubectl namespace is used.
-func NewClientset(namespaceOverride string) (*kubernetes.Clientset, string, *rest.Config, error) {
+func NewClientset(namespaceOverride string) (kubernetes.Interface, string, *rest.Config, error) {
 	configFlags := genericclioptions.NewConfigFlags(true)
 	if namespaceOverride != "" {
 		configFlags.Namespace = &namespaceOverride

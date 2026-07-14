@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/containeroo/sniff/internal/debugpod"
-	"github.com/containeroo/sniff/internal/kube"
 	"github.com/containeroo/sniff/internal/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericiooptions"
@@ -53,10 +52,23 @@ type RunOptions struct {
 
 // RunStandalone creates a standalone debug pod derived from an existing pod.
 func RunStandalone(ctx context.Context, streams genericiooptions.IOStreams, sourcePodName string, opts RunOptions) error {
-	clientset, namespace, _, err := kube.NewClientset(opts.Namespace)
+	deps, err := newRuntimeDependencies(opts.Namespace)
 	if err != nil {
 		return fmt.Errorf("build kubernetes client: %w", err)
 	}
+
+	return runStandalone(ctx, streams, sourcePodName, opts, deps)
+}
+
+func runStandalone(
+	ctx context.Context,
+	streams genericiooptions.IOStreams,
+	sourcePodName string,
+	opts RunOptions,
+	deps runtimeDependencies,
+) error {
+	clientset := deps.client
+	namespace := deps.namespace
 
 	pod, err := clientset.CoreV1().Pods(namespace).Get(ctx, sourcePodName, metav1.GetOptions{})
 	if err != nil {

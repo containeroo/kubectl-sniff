@@ -6,12 +6,9 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - "cmd/**"
-      - "internal/**"
-      - "main.go"
-      - "go.mod"
-      - "go.sum"
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -33,5 +30,21 @@ jobs:
           check-latest: true
           cache: true
 
-      - name: Run tests
-        run: go test ./...
+      - name: Check formatting
+        run: |
+          go fmt ./...
+          git diff --exit-code
+
+      - name: Run vet
+        run: go vet ./...
+
+      - name: Run race tests with coverage
+        run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Enforce coverage floor
+        run: |
+          coverage="$(go tool cover -func=coverage.out | awk '/^total:/ {gsub("%", "", $3); print $3}')"
+          awk -v coverage="${coverage}" 'BEGIN { if (coverage < 40) { printf "coverage %.1f%% is below 40%%\n", coverage; exit 1 } }'
+
+      - name: Run lint
+        run: make lint

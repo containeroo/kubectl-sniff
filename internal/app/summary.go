@@ -9,9 +9,9 @@ import (
 )
 
 // writeBuildSummary prints a human-friendly summary of the generated debug spec.
-func writeBuildSummary(streams genericiooptions.IOStreams, report debugpod.BuildReport, dryRun bool) {
+func writeBuildSummary(streams genericiooptions.IOStreams, report debugpod.BuildReport, dryRun bool) error {
 	if !report.HasDetails() {
-		return
+		return nil
 	}
 
 	writer := streams.Out
@@ -19,19 +19,26 @@ func writeBuildSummary(streams genericiooptions.IOStreams, report debugpod.Build
 		writer = streams.ErrOut
 	}
 
-	fmt.Fprintf(writer, "Summary: %s\n", summarizeBuildReport(report)) // nolint:errcheck
+	_, err := fmt.Fprintf(writer, "Summary: %s\n", summarizeBuildReport(report))
+	return err
 }
 
 // writeAttachShellHint prints the command to open a shell in the new ephemeral container.
-func writeAttachShellHint(streams genericiooptions.IOStreams, namespace string, podName string, containerName string) {
-	fmt.Fprintf(streams.Out, "Open a shell with:\n")                                                              // nolint:errcheck
-	fmt.Fprintf(streams.Out, "  kubectl exec -it -n %s %s -c %s -- /bin/sh\n", namespace, podName, containerName) // nolint:errcheck
+func writeAttachShellHint(streams genericiooptions.IOStreams, namespace string, podName string, containerName string) error {
+	_, err := fmt.Fprintf(
+		streams.Out,
+		"Open a shell with:\n  kubectl exec -it -n %s %s -c %s -- /bin/sh\n",
+		namespace,
+		podName,
+		containerName,
+	)
+	return err
 }
 
 // writeStandaloneShellHint prints the command to open a shell in the standalone debug pod.
-func writeStandaloneShellHint(streams genericiooptions.IOStreams, namespace string, podName string) {
-	fmt.Fprintf(streams.Out, "Open a shell with:\n")                                         // nolint:errcheck
-	fmt.Fprintf(streams.Out, "  kubectl exec -it -n %s %s -- /bin/sh\n", namespace, podName) // nolint:errcheck
+func writeStandaloneShellHint(streams genericiooptions.IOStreams, namespace string, podName string) error {
+	_, err := fmt.Fprintf(streams.Out, "Open a shell with:\n  kubectl exec -it -n %s %s -- /bin/sh\n", namespace, podName)
+	return err
 }
 
 // summarizeBuildReport renders the build report as a single readable summary line.

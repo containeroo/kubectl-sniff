@@ -123,13 +123,17 @@ func runAttach(
 
 	if opts.DryRun {
 		if shouldPrintVerboseDetails(opts.Quiet, opts.Verbose) {
-			writeBuildSummary(streams, report, true)
+			if err := writeBuildSummary(streams, report, true); err != nil {
+				return fmt.Errorf("write build summary: %w", err)
+			}
 		}
 		return writeDryRunManifest(streams, updatedPod, opts.Output)
 	}
 
 	if shouldPrintGeneratedContainerName(opts.Quiet, opts.Verbose, opts.ContainerName) {
-		fmt.Fprintf(streams.Out, "Defaulting debug container name to %q\n", containerName) // nolint:errcheck
+		if _, err := fmt.Fprintf(streams.Out, "Defaulting debug container name to %q\n", containerName); err != nil {
+			return fmt.Errorf("write generated container name: %w", err)
+		}
 	}
 
 	created, err := clientset.CoreV1().Pods(namespace).UpdateEphemeralContainers(ctx, pod.Name, updatedPod, metav1.UpdateOptions{})
@@ -138,11 +142,17 @@ func runAttach(
 	}
 
 	if !opts.Quiet {
-		fmt.Fprintf(streams.Out, "Added ephemeral container %q to pod %s/%s\n", containerName, created.Namespace, created.Name) // nolint:errcheck
-		if shouldPrintVerboseDetails(opts.Quiet, opts.Verbose) {
-			writeBuildSummary(streams, report, false)
+		if _, err := fmt.Fprintf(streams.Out, "Added ephemeral container %q to pod %s/%s\n", containerName, created.Namespace, created.Name); err != nil {
+			return fmt.Errorf("write attach result: %w", err)
 		}
-		writeAttachShellHint(streams, created.Namespace, created.Name, containerName)
+		if shouldPrintVerboseDetails(opts.Quiet, opts.Verbose) {
+			if err := writeBuildSummary(streams, report, false); err != nil {
+				return fmt.Errorf("write build summary: %w", err)
+			}
+		}
+		if err := writeAttachShellHint(streams, created.Namespace, created.Name, containerName); err != nil {
+			return fmt.Errorf("write shell hint: %w", err)
+		}
 	}
 
 	if len(opts.ExecCommand) == 0 {

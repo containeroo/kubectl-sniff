@@ -114,7 +114,9 @@ func runStandalone(
 
 	if opts.DryRun {
 		if shouldPrintVerboseDetails(opts.Quiet, opts.Verbose) {
-			writeBuildSummary(streams, report, true)
+			if err := writeBuildSummary(streams, report, true); err != nil {
+				return fmt.Errorf("write build summary: %w", err)
+			}
 		}
 		return writeDryRunManifest(streams, debugPod, opts.Output)
 	}
@@ -128,11 +130,17 @@ func runStandalone(
 		return nil
 	}
 
-	fmt.Fprintf(streams.Out, "Created debug pod %s/%s\n", created.Namespace, created.Name) // nolint:errcheck
-	if shouldPrintVerboseDetails(opts.Quiet, opts.Verbose) {
-		writeBuildSummary(streams, report, false)
+	if _, err := fmt.Fprintf(streams.Out, "Created debug pod %s/%s\n", created.Namespace, created.Name); err != nil {
+		return fmt.Errorf("write create result: %w", err)
 	}
-	writeStandaloneShellHint(streams, created.Namespace, created.Name)
+	if shouldPrintVerboseDetails(opts.Quiet, opts.Verbose) {
+		if err := writeBuildSummary(streams, report, false); err != nil {
+			return fmt.Errorf("write build summary: %w", err)
+		}
+	}
+	if err := writeStandaloneShellHint(streams, created.Namespace, created.Name); err != nil {
+		return fmt.Errorf("write shell hint: %w", err)
+	}
 
 	return nil
 }

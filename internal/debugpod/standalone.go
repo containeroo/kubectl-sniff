@@ -84,6 +84,10 @@ func BuildStandalonePod(sourcePod *corev1.Pod, opts StandaloneOptions) (*corev1.
 	}
 
 	pod := &corev1.Pod{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Pod",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: sourcePod.Namespace,
 			Labels: map[string]string{

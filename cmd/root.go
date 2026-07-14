@@ -164,7 +164,7 @@ func runRootWorkflow(
 	args []string,
 ) error {
 	dash := cmd.ArgsLenAtDash()
-	podName, namespace, err := cli.ResolvePodSource(args, dash, opts.filename, opts.namespace, streams.In)
+	podName, namespace, err := cli.ResolvePodReference(args, dash, opts.filename, opts.namespace, streams.In)
 	if err != nil {
 		return err
 	}

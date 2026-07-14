@@ -38,9 +38,11 @@ func ValidateSinglePodSource(filename string, podArgs int) error {
 	}
 }
 
-// ResolvePodSource returns the pod name and namespace selected by the caller.
+// ResolvePodReference returns the live pod name and namespace selected by the
+// caller. A manifest supplies metadata only; workflows fetch the current pod
+// from the Kubernetes API before building or applying changes.
 // The namespace override wins over the manifest namespace when both are set.
-func ResolvePodSource(
+func ResolvePodReference(
 	args []string,
 	dash int,
 	filename string,
@@ -56,7 +58,7 @@ func ResolvePodSource(
 		return podArgs[0], namespaceOverride, nil
 	}
 
-	pod, err := loadPodFromFileOrStdin(filename, stdin)
+	pod, err := loadPodReferenceFromFileOrStdin(filename, stdin)
 	if err != nil {
 		return "", "", err
 	}
@@ -69,8 +71,8 @@ func ResolvePodSource(
 	return pod.Name, namespace, nil
 }
 
-// loadPodFromFileOrStdin loads a single Pod manifest from a file path or stdin.
-func loadPodFromFileOrStdin(filename string, stdin io.Reader) (*corev1.Pod, error) {
+// loadPodReferenceFromFileOrStdin loads metadata from a single Pod manifest.
+func loadPodReferenceFromFileOrStdin(filename string, stdin io.Reader) (*corev1.Pod, error) {
 	reader := stdin
 	if filename != "-" {
 		file, err := os.Open(filename)

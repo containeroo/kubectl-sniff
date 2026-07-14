@@ -104,7 +104,7 @@ kubectl get pod mypod -o yaml | kubectl sniff run \
 				return err
 			}
 
-			podName, namespace, err := cli.ResolvePodSource(args, -1, opts.filename, opts.namespace, streams.In)
+			podName, namespace, err := cli.ResolvePodReference(args, -1, opts.filename, opts.namespace, streams.In)
 			if err != nil {
 				return err
 			}

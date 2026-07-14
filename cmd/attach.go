@@ -142,7 +142,7 @@ kubectl get pod mypod -o yaml | kubectl sniff attach \
 				execCommand = args[dash:]
 			}
 
-			podName, namespace, err := cli.ResolvePodSource(args, dash, opts.filename, opts.namespace, streams.In)
+			podName, namespace, err := cli.ResolvePodReference(args, dash, opts.filename, opts.namespace, streams.In)
 			if err != nil {
 				return err
 			}

@@ -93,6 +93,12 @@ kubectl sniff
 
 ## Common Flags
 
+`-f/--filename` reads `metadata.name` and `metadata.namespace` from a Pod
+manifest as an alternative to a positional pod name. The plugin then fetches
+the current live Pod from Kubernetes; other fields in the supplied manifest
+are not used. This keeps attach and clone operations from acting on stale pod
+specifications.
+
 | Flag                            | Applies to         | What it does                                                 |
 | ------------------------------- | ------------------ | ------------------------------------------------------------ |
 | `--image`                       | default, `--clone` | Sets the debug container image                               |

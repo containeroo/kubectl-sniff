@@ -38,7 +38,7 @@ type workflowOptions struct {
 func registerCommonWorkflowFlags(cmd *cobra.Command, opts *workflowOptions) {
 	flags := cmd.Flags()
 	flags.StringVarP(&opts.namespace, "namespace", "n", "", "Namespace of the source pod (defaults to current namespace)")
-	flags.StringVarP(&opts.filename, "filename", "f", "", "Path to a Pod manifest to use as input; use - for stdin")
+	flags.StringVarP(&opts.filename, "filename", "f", "", "Pod manifest whose metadata identifies the live pod; use - for stdin")
 	flags.StringVar(&opts.image, "image", "", "Image for the debug container")
 	flags.StringVar(&opts.fromContainer, "from-container", "", "Source regular container in the pod to copy fields from")
 	flags.BoolVar(&opts.copyEnv, "copy-env", false, "Copy env entries from --from-container")

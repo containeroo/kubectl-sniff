@@ -101,14 +101,14 @@ func TestValidationHelpers(t *testing.T) {
 	})
 }
 
-// TestResolvePodSource verifies pod resolution from args, files, and stdin.
-func TestResolvePodSource(t *testing.T) {
+// TestResolvePodReference verifies pod resolution from args, files, and stdin.
+func TestResolvePodReference(t *testing.T) {
 	t.Parallel()
 
 	t.Run("uses positional pod name", func(t *testing.T) {
 		t.Parallel()
 
-		podName, namespace, err := ResolvePodSource([]string{"demo-pod"}, -1, "", "override-ns", strings.NewReader(""))
+		podName, namespace, err := ResolvePodReference([]string{"demo-pod"}, -1, "", "override-ns", strings.NewReader(""))
 		require.NoError(t, err)
 		assert.Equal(t, "demo-pod", podName)
 		assert.Equal(t, "override-ns", namespace)
@@ -118,7 +118,7 @@ func TestResolvePodSource(t *testing.T) {
 		t.Parallel()
 
 		path := writeTestManifest(t, testPodManifest)
-		podName, namespace, err := ResolvePodSource(nil, -1, path, "", strings.NewReader(""))
+		podName, namespace, err := ResolvePodReference(nil, -1, path, "", strings.NewReader(""))
 		require.NoError(t, err)
 		assert.Equal(t, "demo-pod", podName)
 		assert.Equal(t, "demo-ns", namespace)
@@ -128,7 +128,7 @@ func TestResolvePodSource(t *testing.T) {
 		t.Parallel()
 
 		path := writeTestManifest(t, testPodManifest)
-		podName, namespace, err := ResolvePodSource(nil, -1, path, "flag-ns", strings.NewReader(""))
+		podName, namespace, err := ResolvePodReference(nil, -1, path, "flag-ns", strings.NewReader(""))
 		require.NoError(t, err)
 		assert.Equal(t, "demo-pod", podName)
 		assert.Equal(t, "flag-ns", namespace)
@@ -137,7 +137,7 @@ func TestResolvePodSource(t *testing.T) {
 	t.Run("reads manifest from stdin", func(t *testing.T) {
 		t.Parallel()
 
-		podName, namespace, err := ResolvePodSource(nil, -1, "-", "", strings.NewReader(testPodManifest))
+		podName, namespace, err := ResolvePodReference(nil, -1, "-", "", strings.NewReader(testPodManifest))
 		require.NoError(t, err)
 		assert.Equal(t, "demo-pod", podName)
 		assert.Equal(t, "demo-ns", namespace)
@@ -152,7 +152,7 @@ kind: ConfigMap
 metadata:
   name: demo
 `)
-		_, _, err := ResolvePodSource(nil, -1, path, "", strings.NewReader(""))
+		_, _, err := ResolvePodReference(nil, -1, path, "", strings.NewReader(""))
 		require.Error(t, err)
 		assert.ErrorContains(t, err, "manifest must be a Pod")
 	})
@@ -171,7 +171,7 @@ kind: Pod
 metadata:
   name: second
 `)
-		_, _, err := ResolvePodSource(nil, -1, path, "", strings.NewReader(""))
+		_, _, err := ResolvePodReference(nil, -1, path, "", strings.NewReader(""))
 		require.Error(t, err)
 		assert.ErrorContains(t, err, "exactly one Pod document")
 	})

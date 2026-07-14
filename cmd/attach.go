@@ -12,42 +12,7 @@ import (
 
 // attachOptions stores the flags for the attach command.
 type attachOptions struct {
-	// namespace overrides the active kubectl namespace.
-	namespace string
-	// filename selects a pod manifest to use instead of a positional pod name.
-	filename string
-	// image is the container image for the ephemeral debugger.
-	image string
-	// containerName is the name assigned to the new ephemeral container.
-	containerName string
-	// target is the regular container whose namespaces should be targeted.
-	target string
-	// fromContainer is the regular container used as a copy source.
-	fromContainer string
-	// stdin enables stdin for the post-create exec session.
-	stdin bool
-	// tty enables TTY allocation for the post-create exec session.
-	tty bool
-	// copyEnv copies env entries from the source container.
-	copyEnv bool
-	// copyEnvFrom copies envFrom entries from the source container.
-	copyEnvFrom bool
-	// copyVolumeMounts copies volume mounts from the source container.
-	copyVolumeMounts bool
-	// copyServiceAccountMounts includes service account token mounts when copying volumes.
-	copyServiceAccountMounts bool
-	// rewriteSubPathMounts rewrites subPath mounts into debug-friendly direct mounts.
-	rewriteSubPathMounts bool
-	// dryRun prints the updated manifest instead of patching the pod.
-	dryRun bool
-	// output selects the dry-run output format.
-	output string
-	// quiet suppresses informational output.
-	quiet bool
-	// verbose enables detailed informational output.
-	verbose bool
-	// profile applies a predefined security context to the debug container.
-	profile string
+	workflowOptions
 }
 
 // toAppOptions converts attach flags into application options.
@@ -188,27 +153,11 @@ kubectl get pod mypod -o yaml | kubectl sniff attach \
 		},
 	}
 
+	registerCommonWorkflowFlags(cmd, &opts.workflowOptions)
+	registerAttachWorkflowFlags(cmd, &opts.workflowOptions)
 	flags := cmd.Flags()
-	flags.StringVarP(&opts.namespace, "namespace", "n", "", "Namespace of the target pod (defaults to current namespace)")
-	flags.StringVarP(&opts.filename, "filename", "f", "", "Path to a Pod manifest to use as input; use - for stdin")
-	flags.StringVar(&opts.image, "image", "", "Image for the new ephemeral debug container")
-	flags.StringVarP(&opts.containerName, "container", "c", opts.containerName, "Name of the new ephemeral debug container (defaults to a generated sniff-xxxxx name)")
-	flags.StringVar(&opts.target, "target", "", "Target container name whose namespaces should be targeted when supported")
-	flags.StringVar(&opts.fromContainer, "from-container", "", "Source regular container in the pod to copy fields from")
 	flags.BoolVarP(&opts.stdin, "stdin", "i", false, "Pass stdin to the command executed after --")
 	flags.BoolVarP(&opts.tty, "tty", "t", false, "Allocate a TTY for the command executed after --")
-	flags.BoolVar(&opts.copyEnv, "copy-env", false, "Copy env entries from --from-container")
-	flags.BoolVar(&opts.copyEnvFrom, "copy-env-from", false, "Copy envFrom entries from --from-container")
-	flags.BoolVar(&opts.copyVolumeMounts, "copy-volume-mounts", false, "Copy volumeMounts from --from-container")
-	flags.BoolVar(&opts.copyServiceAccountMounts, "copy-service-account-mounts", false, "When copying volume mounts, include service account token mounts")
-	flags.BoolVar(&opts.rewriteSubPathMounts, "rewrite-subpath-mounts", false, "Rewrite subPath and subPathExpr mounts to debug-friendly directory mounts under /mnt/sniff/volumes")
-	flags.BoolVar(&opts.dryRun, "dry-run", false, "Print the updated pod manifest instead of patching the pod")
-	flags.StringVarP(&opts.output, "output", "o", "", `Output format for --dry-run (supported: "yaml", "json")`)
-	flags.BoolVarP(&opts.quiet, "quiet", "q", false, "Suppress non-error informational output")
-	flags.BoolVarP(&opts.verbose, "verbose", "v", false, "Show detailed informational output")
-	flags.StringVar(&opts.profile, "profile", "", `Apply a predefined debug profile ("general", "netadmin", "sysadmin", "privileged")`)
-	markFlagRequired(cmd, "image")
-	cli.RegisterProfileFlagCompletion(cmd)
 
 	return cmd
 }

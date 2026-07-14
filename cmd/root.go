@@ -13,52 +13,9 @@ import (
 
 // rootOptions stores the flags for the preferred root workflow.
 type rootOptions struct {
+	workflowOptions
 	// clone switches from in-place ephemeral attach to standalone debug pod creation.
 	clone bool
-	// namespace overrides the active kubectl namespace.
-	namespace string
-	// filename selects a pod manifest to use instead of a positional pod name.
-	filename string
-	// image is the debug container image for either workflow.
-	image string
-	// name is the explicit pod name to create in clone mode.
-	name string
-	// containerName is the name assigned to the new ephemeral container.
-	containerName string
-	// target is the regular container whose namespaces should be targeted.
-	target string
-	// fromContainer is the regular container used as a copy source.
-	fromContainer string
-	// command overrides the standalone debug container entrypoint in clone mode.
-	command []string
-	// args appends arguments to the standalone debug container command in clone mode.
-	args []string
-	// stdin controls exec stdin for attach mode and container stdin for clone mode.
-	stdin bool
-	// tty controls exec TTY for attach mode and container TTY for clone mode.
-	tty bool
-	// copyEnv copies env entries from the source container.
-	copyEnv bool
-	// copyEnvFrom copies envFrom entries from the source container.
-	copyEnvFrom bool
-	// copyVolumeMounts copies volume mounts from the source container.
-	copyVolumeMounts bool
-	// copyServiceAccountMounts includes service account token mounts when copying volumes.
-	copyServiceAccountMounts bool
-	// rewriteSubPathMounts rewrites subPath mounts into debug-friendly direct mounts.
-	rewriteSubPathMounts bool
-	// serviceAccount sets the service account on the created debug pod in clone mode.
-	serviceAccount string
-	// dryRun prints the generated manifest instead of creating resources.
-	dryRun bool
-	// output selects the dry-run output format.
-	output string
-	// quiet suppresses informational output.
-	quiet bool
-	// verbose enables detailed informational output.
-	verbose bool
-	// profile applies a predefined security context to the debug container.
-	profile string
 }
 
 // NewRootCmd creates the root command for the kubectl plugin.
@@ -119,32 +76,13 @@ kubectl get pod mypod -o yaml | kubectl sniff \
 	cmd.SetOut(streams.Out)
 	cmd.SetErr(streams.ErrOut)
 
+	registerCommonWorkflowFlags(cmd, &opts.workflowOptions)
+	registerAttachWorkflowFlags(cmd, &opts.workflowOptions)
+	registerCloneWorkflowFlags(cmd, &opts.workflowOptions)
 	flags := cmd.Flags()
 	flags.BoolVar(&opts.clone, "clone", false, "Create a standalone debug pod instead of attaching an ephemeral container")
-	flags.StringVarP(&opts.namespace, "namespace", "n", "", "Namespace of the source pod (defaults to current namespace)")
-	flags.StringVarP(&opts.filename, "filename", "f", "", "Path to a Pod manifest to use as input; use - for stdin")
-	flags.StringVar(&opts.image, "image", "", "Image for the debug container")
-	flags.StringVar(&opts.name, "name", "", "Name of the created debug pod in clone mode (defaults to generated name)")
-	flags.StringVarP(&opts.containerName, "container", "c", "", "Name of the new ephemeral debug container")
-	flags.StringVar(&opts.target, "target", "", "Target container name whose namespaces should be targeted when supported")
-	flags.StringVar(&opts.fromContainer, "from-container", "", "Source regular container in the pod to copy fields from")
-	flags.StringSliceVar(&opts.command, "command", nil, "Command for the standalone debug container in clone mode")
-	flags.StringSliceVar(&opts.args, "arg", nil, "Argument for --command in clone mode; repeat for multiple arguments")
 	flags.BoolVarP(&opts.stdin, "stdin", "i", false, "Pass stdin to the command executed after --; with --clone, keep stdin open on the standalone debug container")
 	flags.BoolVarP(&opts.tty, "tty", "t", false, "Allocate a TTY for the command executed after --; with --clone, allocate a TTY on the standalone debug container")
-	flags.BoolVar(&opts.copyEnv, "copy-env", false, "Copy env entries from --from-container")
-	flags.BoolVar(&opts.copyEnvFrom, "copy-env-from", false, "Copy envFrom entries from --from-container")
-	flags.BoolVar(&opts.copyVolumeMounts, "copy-volume-mounts", false, "Copy volumeMounts from --from-container")
-	flags.BoolVar(&opts.copyServiceAccountMounts, "copy-service-account-mounts", false, "When copying volume mounts, include service account token mounts")
-	flags.BoolVar(&opts.rewriteSubPathMounts, "rewrite-subpath-mounts", false, "Rewrite subPath and subPathExpr mounts to debug-friendly directory mounts under /mnt/sniff/volumes")
-	flags.StringVar(&opts.serviceAccount, "service-account", "", `Service account for the cloned debug pod; use "from-pod" to copy from the source pod`)
-	flags.BoolVar(&opts.dryRun, "dry-run", false, "Print the generated manifest instead of creating it")
-	flags.StringVarP(&opts.output, "output", "o", "", `Output format for --dry-run (supported: "yaml", "json")`)
-	flags.BoolVarP(&opts.quiet, "quiet", "q", false, "Suppress non-error informational output")
-	flags.BoolVarP(&opts.verbose, "verbose", "v", false, "Show detailed informational output")
-	flags.StringVar(&opts.profile, "profile", "", `Apply a predefined debug profile ("general", "netadmin", "sysadmin", "privileged")`)
-	markFlagRequired(cmd, "image")
-	cli.RegisterProfileFlagCompletion(cmd)
 
 	cmd.AddCommand(NewAttachCmd(streams))
 	cmd.AddCommand(NewRunCmd(streams))

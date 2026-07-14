@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"time"
+
 	"github.com/containeroo/sniff/internal/cli"
 	"github.com/spf13/cobra"
 )
@@ -30,6 +32,7 @@ type workflowOptions struct {
 	quiet                    bool
 	verbose                  bool
 	profile                  string
+	waitTimeout              time.Duration
 }
 
 func registerCommonWorkflowFlags(cmd *cobra.Command, opts *workflowOptions) {
@@ -56,6 +59,7 @@ func registerAttachWorkflowFlags(cmd *cobra.Command, opts *workflowOptions) {
 	flags.StringVarP(&opts.containerName, "container", "c", "", "Name of the new ephemeral debug container (defaults to a generated sniff-xxxxx name)")
 	flags.StringVar(&opts.target, "target", "", "Target container name whose namespaces should be targeted when supported")
 	flags.BoolVar(&opts.rewriteSubPathMounts, "rewrite-subpath-mounts", false, "Rewrite subPath and subPathExpr mounts to debug-friendly directory mounts under /mnt/sniff/volumes")
+	flags.DurationVar(&opts.waitTimeout, "wait-timeout", 2*time.Minute, "Maximum time to wait for the ephemeral container before exec")
 }
 
 func registerCloneWorkflowFlags(cmd *cobra.Command, opts *workflowOptions) {

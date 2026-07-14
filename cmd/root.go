@@ -224,6 +224,7 @@ func runRootWorkflow(
 		Quiet:                    quiet,
 		Verbose:                  verbose,
 		Profile:                  opts.profile,
+		WaitTimeout:              opts.waitTimeout,
 	}
 
 	return app.RunAttach(cmd.Context(), streams, podName, appOpts)

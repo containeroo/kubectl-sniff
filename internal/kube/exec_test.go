@@ -1,9 +1,12 @@
 package kube
 
 import (
+	"context"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/fake"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -83,4 +86,45 @@ func TestEvaluateEphemeralContainerStatus(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, done)
 	})
+}
+
+func TestWaitForEphemeralContainerRunningChecksImmediately(t *testing.T) {
+	t.Parallel()
+
+	client := fake.NewSimpleClientset(&corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{Name: "app", Namespace: "default"},
+		Status: corev1.PodStatus{
+			EphemeralContainerStatuses: []corev1.ContainerStatus{{
+				Name:  "debugger",
+				State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{}},
+			}},
+		},
+	})
+
+	require.NoError(t, WaitForEphemeralContainerRunning(
+		context.Background(),
+		client,
+		"default",
+		"app",
+		"debugger",
+	))
+}
+
+func TestWaitForEphemeralContainerRunningRejectsTerminalPod(t *testing.T) {
+	t.Parallel()
+
+	client := fake.NewSimpleClientset(&corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{Name: "app", Namespace: "default"},
+		Status:     corev1.PodStatus{Phase: corev1.PodFailed},
+	})
+
+	err := WaitForEphemeralContainerRunning(
+		context.Background(),
+		client,
+		"default",
+		"app",
+		"debugger",
+	)
+	require.Error(t, err)
+	assert.ErrorContains(t, err, `pod default/app reached terminal phase "Failed"`)
 }

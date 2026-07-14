@@ -107,6 +107,7 @@ kubectl sniff
 | `-o, --output`                  | default, `--clone` | Selects the dry-run format: yaml or json                     |
 | `--target`                      | default            | Targets another container's namespaces when supported        |
 | `--rewrite-subpath-mounts`      | default            | Rewrites copied `subPath` mounts into debug-friendly mounts  |
+| `--wait-timeout`                | default            | Bounds the wait before executing a command (default: 2m)     |
 | `--command`                     | `--clone`          | Sets the standalone debug container command                  |
 | `--arg`                         | `--clone`          | Appends arguments to `--command`; repeat for multiple values |
 | `--service-account`             | `--clone`          | Sets the service account on the standalone debug pod         |

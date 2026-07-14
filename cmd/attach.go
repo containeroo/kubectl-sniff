@@ -36,6 +36,7 @@ func (o *attachOptions) toAppOptions(execCommand []string, quiet bool, verbose b
 		Quiet:                    quiet,
 		Verbose:                  verbose,
 		Profile:                  o.profile,
+		WaitTimeout:              o.waitTimeout,
 	}
 }
 

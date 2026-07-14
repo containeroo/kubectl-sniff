@@ -24,22 +24,37 @@ func WaitForEphemeralContainerRunning(
 	clientset kubernetes.Interface,
 	namespace, podName, containerName string,
 ) error {
+	var lastPod *corev1.Pod
+	checkStatus := func() (bool, error) {
+		pod, err := clientset.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+		lastPod = pod
+
+		if pod.DeletionTimestamp != nil {
+			return false, fmt.Errorf("pod %s/%s is being deleted", namespace, podName)
+		}
+		if pod.Status.Phase == corev1.PodFailed || pod.Status.Phase == corev1.PodSucceeded {
+			return false, fmt.Errorf("pod %s/%s reached terminal phase %q", namespace, podName, pod.Status.Phase)
+		}
+
+		return evaluateEphemeralContainerStatus(pod.Status.EphemeralContainerStatuses, containerName)
+	}
+
+	if done, err := checkStatus(); err != nil || done {
+		return err
+	}
+
 	ticker := time.NewTicker(ephemeralContainerPollInterval)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return fmt.Errorf("stopped waiting for ephemeral container %q%s: %w", containerName, podWaitDetails(lastPod), ctx.Err())
 		case <-ticker.C:
-			// The pod status is updated asynchronously after the ephemeral container
-			// is added, so poll until the runtime reports it as running.
-			pod, err := clientset.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
-			if err != nil {
-				return err
-			}
-
-			done, err := evaluateEphemeralContainerStatus(pod.Status.EphemeralContainerStatuses, containerName)
+			done, err := checkStatus()
 			if err != nil {
 				return err
 			}
@@ -48,6 +63,23 @@ func WaitForEphemeralContainerRunning(
 			}
 		}
 	}
+}
+
+func podWaitDetails(pod *corev1.Pod) string {
+	if pod == nil {
+		return ""
+	}
+
+	for _, condition := range pod.Status.Conditions {
+		if condition.Status != corev1.ConditionTrue && strings.TrimSpace(condition.Message) != "" {
+			return fmt.Sprintf("; pod condition %s is %s: %s", condition.Type, condition.Status, strings.TrimSpace(condition.Message))
+		}
+	}
+	if pod.Status.Phase != "" {
+		return fmt.Sprintf("; pod phase is %s", pod.Status.Phase)
+	}
+
+	return ""
 }
 
 func evaluateEphemeralContainerStatus(statuses []corev1.ContainerStatus, containerName string) (bool, error) {

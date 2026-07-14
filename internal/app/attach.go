@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/containeroo/sniff/internal/debugpod"
 	"github.com/containeroo/sniff/internal/util"
@@ -52,6 +53,8 @@ type AttachOptions struct {
 	Verbose bool
 	// Profile applies a predefined security context to the debug container.
 	Profile string
+	// WaitTimeout bounds how long the workflow waits before starting exec.
+	WaitTimeout time.Duration
 }
 
 // RunAttach executes the attach flow against an existing pod.
@@ -146,11 +149,18 @@ func runAttach(
 		return nil
 	}
 
-	if err := deps.waitForEphemeralContainerRunning(ctx, clientset, namespace, pod.Name, containerName); err != nil {
+	waitContext := ctx
+	cancel := func() {}
+	if opts.WaitTimeout > 0 {
+		waitContext, cancel = context.WithTimeout(ctx, opts.WaitTimeout)
+	}
+	defer cancel()
+
+	if err := deps.waitForEphemeralContainerRunning(waitContext, clientset, namespace, pod.Name, containerName); err != nil {
 		return fmt.Errorf("wait for ephemeral container %q to be running: %w", containerName, err)
 	}
 
-	return deps.execInPod(
+	if err := deps.execInPod(
 		ctx,
 		deps.restConfig,
 		clientset,
@@ -163,7 +173,11 @@ func runAttach(
 		streams.ErrOut,
 		opts.Stdin,
 		opts.TTY,
-	)
+	); err != nil {
+		return fmt.Errorf("exec command in pod %s/%s container %q: %w", namespace, pod.Name, containerName, err)
+	}
+
+	return nil
 }
 
 // defaultEphemeralContainerName returns a kubectl-debug-style generated container name.

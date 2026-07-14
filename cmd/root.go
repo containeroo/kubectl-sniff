@@ -110,6 +110,13 @@ func validateRootArgs(cmd *cobra.Command, opts *rootOptions, args []string) erro
 	if err := cli.ValidateProfileFlag(opts.profile); err != nil {
 		return err
 	}
+	if opts.filename == "" {
+		if err := validateExplicitNames(&opts.workflowOptions, args[0], opts.clone); err != nil {
+			return err
+		}
+	} else if err := validateExplicitNames(&opts.workflowOptions, "", opts.clone); err != nil {
+		return err
+	}
 
 	if opts.clone {
 		if dash != -1 {

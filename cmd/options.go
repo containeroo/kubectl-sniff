@@ -69,3 +69,17 @@ func registerCloneWorkflowFlags(cmd *cobra.Command, opts *workflowOptions) {
 	flags.StringSliceVar(&opts.args, "arg", nil, "Argument for --command; repeat for multiple arguments")
 	flags.StringVar(&opts.serviceAccount, "service-account", "", `Service account for the cloned debug pod; use "from-pod" to copy from the source pod`)
 }
+
+func validateExplicitNames(opts *workflowOptions, podName string, clone bool) error {
+	if err := cli.ValidatePodName(podName); err != nil {
+		return err
+	}
+	if clone {
+		if err := cli.ValidatePodName(opts.name); err != nil {
+			return err
+		}
+		return cli.ValidateServiceAccountName(opts.serviceAccount)
+	}
+
+	return cli.ValidateContainerName(opts.containerName)
+}

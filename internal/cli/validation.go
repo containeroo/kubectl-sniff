@@ -1,6 +1,11 @@
 package cli
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+
+	k8svalidation "k8s.io/apimachinery/pkg/util/validation"
+)
 
 // IsSupportedOutputFormat reports whether the dry-run output format is supported.
 func IsSupportedOutputFormat(output string) bool {
@@ -26,4 +31,35 @@ func CanRewriteSubPathMounts(copyVolumeMounts bool, rewriteSubPathMounts bool) b
 // conflicting with the attach exec session stdin.
 func CanUseManifestStdin(filename string, stdin bool) bool {
 	return filename != "-" || !stdin
+}
+
+func ValidatePodName(name string) error {
+	return validateDNS1123Subdomain("pod name", name)
+}
+
+func ValidateContainerName(name string) error {
+	if strings.TrimSpace(name) == "" {
+		return nil
+	}
+	if problems := k8svalidation.IsDNS1123Label(name); len(problems) != 0 {
+		return fmt.Errorf("invalid container name %q: %s", name, strings.Join(problems, "; "))
+	}
+	return nil
+}
+
+func ValidateServiceAccountName(name string) error {
+	if name == "from-pod" {
+		return nil
+	}
+	return validateDNS1123Subdomain("service account name", name)
+}
+
+func validateDNS1123Subdomain(kind string, name string) error {
+	if strings.TrimSpace(name) == "" {
+		return nil
+	}
+	if problems := k8svalidation.IsDNS1123Subdomain(name); len(problems) != 0 {
+		return fmt.Errorf("invalid %s %q: %s", kind, name, strings.Join(problems, "; "))
+	}
+	return nil
 }

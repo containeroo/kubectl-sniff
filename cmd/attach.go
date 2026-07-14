@@ -132,6 +132,12 @@ kubectl get pod mypod -o yaml | kubectl sniff attach \
 			if err := cli.ValidateProfileFlag(opts.profile); err != nil {
 				return err
 			}
+			if opts.filename == "" {
+				return validateExplicitNames(&opts.workflowOptions, args[0], false)
+			}
+			if err := validateExplicitNames(&opts.workflowOptions, "", false); err != nil {
+				return err
+			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {

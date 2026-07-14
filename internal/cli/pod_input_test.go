@@ -175,6 +175,20 @@ metadata:
 		require.Error(t, err)
 		assert.ErrorContains(t, err, "exactly one Pod document")
 	})
+
+	t.Run("rejects an invalid pod name", func(t *testing.T) {
+		t.Parallel()
+
+		path := writeTestManifest(t, `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: Invalid_Name
+`)
+		_, _, err := ResolvePodReference(nil, -1, path, "", strings.NewReader(""))
+		require.Error(t, err)
+		assert.ErrorContains(t, err, "invalid pod name")
+	})
 }
 
 func writeTestManifest(t *testing.T, content string) string {

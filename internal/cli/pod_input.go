@@ -94,6 +94,9 @@ func loadPodReferenceFromFileOrStdin(filename string, stdin io.Reader) (*corev1.
 	if strings.TrimSpace(pod.Name) == "" {
 		return nil, errors.New("pod manifest metadata.name is required")
 	}
+	if err := ValidatePodName(pod.Name); err != nil {
+		return nil, fmt.Errorf("pod manifest: %w", err)
+	}
 
 	return pod, nil
 }

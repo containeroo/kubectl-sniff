@@ -192,6 +192,10 @@ kubectl sniff mypod \
 
 Use `--clone` when you want a separate debug pod derived from the source pod.
 
+Cloned debug pods do not receive a service account token by default. Set
+`--service-account NAME`, use `--service-account from-pod`, or request
+`--copy-service-account-mounts` when the debugger needs Kubernetes API credentials.
+
 This creates a new pod with one debug container. Unlike the default attach workflow, `--clone` does not open
 an immediate shell with `-- bash`; instead it creates the standalone pod and keeps it
 running so you can `kubectl exec` into it afterward.

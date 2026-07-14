@@ -55,10 +55,12 @@ func BuildStandalonePod(sourcePod *corev1.Pod, opts StandaloneOptions) (*corev1.
 	}
 
 	container := buildStandaloneContainer(opts)
+	automountServiceAccountToken := opts.ServiceAccount != "" || opts.CopyServiceAccountMounts
 	podSpec := corev1.PodSpec{
-		RestartPolicy:      corev1.RestartPolicyNever,
-		ServiceAccountName: opts.ServiceAccount,
-		Containers:         []corev1.Container{container},
+		RestartPolicy:                corev1.RestartPolicyNever,
+		ServiceAccountName:           opts.ServiceAccount,
+		AutomountServiceAccountToken: &automountServiceAccountToken,
+		Containers:                   []corev1.Container{container},
 	}
 
 	if sourceContainer != nil {

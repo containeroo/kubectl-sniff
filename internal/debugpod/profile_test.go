@@ -80,3 +80,27 @@ func TestBuildUpdatedPodAppliesProfileAndReport(t *testing.T) {
 	assert.Equal(t, "app", report.SourceContainer)
 	assert.Equal(t, 2, report.CopiedEnv)
 }
+
+func TestBuildSecurityContextForEveryProfile(t *testing.T) {
+	t.Parallel()
+
+	assert.Nil(t, buildSecurityContextForProfile(""))
+
+	general := buildSecurityContextForProfile(ProfileGeneral)
+	require.NotNil(t, general)
+	require.NotNil(t, general.AllowPrivilegeEscalation)
+	assert.False(t, *general.AllowPrivilegeEscalation)
+
+	netadmin := buildSecurityContextForProfile(ProfileNetAdmin)
+	require.NotNil(t, netadmin)
+	assert.Equal(t, []corev1.Capability{"NET_ADMIN", "NET_RAW"}, netadmin.Capabilities.Add)
+
+	sysadmin := buildSecurityContextForProfile(ProfileSysAdmin)
+	require.NotNil(t, sysadmin)
+	assert.Equal(t, corev1.SeccompProfileTypeUnconfined, sysadmin.SeccompProfile.Type)
+
+	privileged := buildSecurityContextForProfile(ProfilePrivileged)
+	require.NotNil(t, privileged)
+	require.NotNil(t, privileged.Privileged)
+	assert.True(t, *privileged.Privileged)
+}

@@ -122,15 +122,13 @@ func RunAttach(ctx context.Context, streams genericiooptions.IOStreams, podName 
 		return fmt.Errorf("update ephemeral containers for pod %q: %w", pod.Name, err)
 	}
 
-	if opts.Quiet {
-		return nil
+	if !opts.Quiet {
+		fmt.Fprintf(streams.Out, "Added ephemeral container %q to pod %s/%s\n", containerName, created.Namespace, created.Name) // nolint:errcheck
+		if shouldPrintVerboseDetails(opts.Quiet, opts.Verbose) {
+			writeBuildSummary(streams, report, false)
+		}
+		writeAttachShellHint(streams, created.Namespace, created.Name, containerName)
 	}
-
-	fmt.Fprintf(streams.Out, "Added ephemeral container %q to pod %s/%s\n", containerName, created.Namespace, created.Name) // nolint:errcheck
-	if shouldPrintVerboseDetails(opts.Quiet, opts.Verbose) {
-		writeBuildSummary(streams, report, false)
-	}
-	writeAttachShellHint(streams, created.Namespace, created.Name, containerName)
 
 	if len(opts.ExecCommand) == 0 {
 		return nil

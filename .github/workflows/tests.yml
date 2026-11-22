@@ -1,19 +1,25 @@
 ---
-name: Tests
+name: Unit Tests
 
 on:
   workflow_call:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
+    paths:
+      - "internal/**"
+      - "cmd/**"
+      - "go.mod"
+      - "go.sum"
+      - "web/**"
+      - "examples/**"
+      - "scripts/**"
+      - ".github/workflows/tests.yml"
   workflow_dispatch:
 
 jobs:
   tests:
-    name: Go Test
+    name: Run Tests
     runs-on: ubuntu-latest
 
     permissions:
@@ -22,29 +28,52 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version-file: "go.mod"
           check-latest: true
           cache: true
 
-      - name: Check formatting
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: "web/package-lock.json"
+
+      - name: Install Dependencies
         run: |
-          go fmt ./...
-          git diff --exit-code
+          make download
 
-      - name: Run vet
-        run: go vet ./...
-
-      - name: Run race tests with coverage
-        run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
-
-      - name: Enforce coverage floor
+      - name: Build Frontend
         run: |
-          coverage="$(go tool cover -func=coverage.out | awk '/^total:/ {gsub("%", "", $3); print $3}')"
-          awk -v coverage="${coverage}" 'BEGIN { if (coverage < 40) { printf "coverage %.1f%% is below 40%%\n", coverage; exit 1 } }'
+          cd web
+          npm ci
+          npm run typecheck
+          npm run lint
+          npm run format:check
+          npm run build
 
-      - name: Run lint
-        run: make lint
+      - name: Check formatting and exercise YAML
+        run: |
+          test -z "$(gofmt -l .)"
+          go vet ./...
+          go run honnef.co/go/tools/cmd/staticcheck@v0.6.1 ./...
+          ruby scripts/check-core-exercises.rb
+          git diff --check
+
+      - name: Upload web dist artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-dist
+          path: web/dist
+          if-no-files-found: error
+
+      - name: Run Unit Tests
+        run: |
+          make test

@@ -1,6 +1,5 @@
 # kubectl-sniff
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/containeroo/kubectl-sniff?style=flat-square)](https://goreportcard.com/report/github.com/containeroo/kubectl-sniff)
 [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/containeroo/kubectl-sniff)
 [![Release](https://img.shields.io/github/release/containeroo/kubectl-sniff.svg?style=flat-square)](https://github.com/containeroo/kubectl-sniff/releases/latest)
 [![GitHub tag](https://img.shields.io/github/tag/containeroo/kubectl-sniff.svg?style=flat-square)](https://github.com/containeroo/kubectl-sniff/releases/latest)

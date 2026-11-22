@@ -1,5 +1,13 @@
 {
   "extends": ["config:recommended"],
   "labels": ["dependency"],
-  "postUpdateOptions": ["gomodTidy"]
+  "postUpdateOptions": ["gomodTidy"],
+  "packageRules": [
+    {
+      "description": "Keep client-go on Kubernetes-aligned v0 releases; legacy v11 tags are older.",
+      "matchManagers": ["gomod"],
+      "matchPackageNames": ["k8s.io/client-go"],
+      "allowedVersions": "<1.0.0"
+    }
+  ]
 }
